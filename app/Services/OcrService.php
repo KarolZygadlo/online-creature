@@ -7,7 +7,6 @@ namespace App\Services;
 use App\DTOs\DataToAnalyze;
 use App\Enums\DocumentType;
 use Illuminate\Http\Client\ConnectionException;
-use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
 use Psy\Util\Json;
 
@@ -15,9 +14,8 @@ class OcrService
 {
     /**
      * @throws ConnectionException
-     * @throws RequestException
      */
-    public function analyzeDocument(DataToAnalyze $data): void
+    public function analyzeDocument(DataToAnalyze $data): Json
     {
         $response = Http::withHeaders([
             "Ocp-Apim-Subscription-Key" => env("AZURE_ACCESS_KEY"),
@@ -32,25 +30,23 @@ class OcrService
             "base64Source" => $data->document,
         ]);
 
-        $response = $this->getAnalyzeResult($response->header("apim-request-id"), $data->type);
+        sleep(20);
 
-        dd($response);
+        return $this->getAnalyzeResult($response->header("apim-request-id"), $data->type);
     }
 
     /**
      * @throws ConnectionException
-     * @throws RequestException
      */
-    protected function getAnalyzeResult(string $id, DocumentType $type)
+    protected function getAnalyzeResult(string $id, DocumentType $type): Json
     {
-        return Http::withHeaders([
-            "Ocp-Apim-Subscription-Key" => env("AZURE_ACCESS_KEY"),
-            "Content-Type" => "application/json",
-        ])->withUrlParameters([
-             "endpoint" => env("AZURE_ENDPOINT") . "documentintelligence/documentModels",
-             "model" => $type->value,
-         ])->withQueryParameters([
-             "api-version" => "2024-02-29-preview",
-         ])->get("{+endpoint}/{model}/analyzeResults/" . $id)->throw();
+        return Http::retry(3, 100)->withHeaders([
+            "Ocp-Apim-Subscription-Key" => env("AZURE_ACCESS_KEY")])
+            ->withUrlParameters([
+                "endpoint" => env("AZURE_ENDPOINT") . "documentintelligence/documentModels",
+                "model" => $type->value,
+            ])->withQueryParameters([
+                "api-version" => "2024-02-29-preview",
+            ])->get("{+endpoint}/{model}/analyzeResults/" . $id)->json();
     }
 }
