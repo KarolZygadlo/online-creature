@@ -15,7 +15,7 @@ class OcrService
     /**
      * @throws ConnectionException
      */
-    public function analyzeDocument(DataToAnalyze $data): Json
+    public function analyzeDocument(DataToAnalyze $data)
     {
         $response = Http::withHeaders([
             "Ocp-Apim-Subscription-Key" => env("AZURE_ACCESS_KEY"),
@@ -30,23 +30,23 @@ class OcrService
             "base64Source" => $data->document,
         ]);
 
-        sleep(20);
+        $response = $this->getAnalyzeResult($response->header("apim-request-id"), $data->type);
 
-        return $this->getAnalyzeResult($response->header("apim-request-id"), $data->type);
+        dd($response);
     }
 
     /**
      * @throws ConnectionException
      */
-    protected function getAnalyzeResult(string $id, DocumentType $type): Json
+    protected function getAnalyzeResult(string $id, DocumentType $type)
     {
-        return Http::retry(3, 100)->withHeaders([
+        return Http::async()->withHeaders([
             "Ocp-Apim-Subscription-Key" => env("AZURE_ACCESS_KEY")])
             ->withUrlParameters([
                 "endpoint" => env("AZURE_ENDPOINT") . "documentintelligence/documentModels",
                 "model" => $type->value,
             ])->withQueryParameters([
                 "api-version" => "2024-02-29-preview",
-            ])->get("{+endpoint}/{model}/analyzeResults/" . $id)->json();
+            ])->get("{+endpoint}/{model}/analyzeResults/" . $id);
     }
 }
