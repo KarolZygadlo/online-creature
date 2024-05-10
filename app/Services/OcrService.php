@@ -6,16 +6,17 @@ namespace App\Services;
 
 use App\DTOs\DataToAnalyze;
 use App\Enums\DocumentType;
+use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
-use Psy\Util\Json;
 
 class OcrService
 {
     /**
      * @throws ConnectionException
      */
-    public function analyzeDocument(DataToAnalyze $data)
+    public function analyzeDocument(DataToAnalyze $data): PromiseInterface|Response
     {
         $response = Http::withHeaders([
             "Ocp-Apim-Subscription-Key" => env("AZURE_ACCESS_KEY"),
@@ -30,15 +31,13 @@ class OcrService
             "base64Source" => $data->document,
         ]);
 
-        $response = $this->getAnalyzeResult($response->header("apim-request-id"), $data->type);
-
-        dd($response);
+        return $this->getAnalyzeResult($response->header("apim-request-id"), $data->type);
     }
 
     /**
      * @throws ConnectionException
      */
-    protected function getAnalyzeResult(string $id, DocumentType $type)
+    protected function getAnalyzeResult(string $id, DocumentType $type): PromiseInterface|Response
     {
         return Http::async()->withHeaders([
             "Ocp-Apim-Subscription-Key" => env("AZURE_ACCESS_KEY")])
