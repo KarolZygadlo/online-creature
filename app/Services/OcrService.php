@@ -8,14 +8,13 @@ use App\DTOs\DataToAnalyze;
 use App\Enums\DocumentType;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
-use Psy\Util\Json;
 
 class OcrService
 {
     /**
      * @throws ConnectionException
      */
-    public function analyzeDocument(DataToAnalyze $data)
+    public function analyzeDocument(DataToAnalyze $data): void
     {
         $response = Http::withHeaders([
             "Ocp-Apim-Subscription-Key" => env("AZURE_ACCESS_KEY"),
@@ -31,8 +30,6 @@ class OcrService
         ]);
 
         $response = $this->getAnalyzeResult($response->header("apim-request-id"), $data->type);
-
-        dd($response);
     }
 
     /**
