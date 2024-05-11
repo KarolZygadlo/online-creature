@@ -16,6 +16,8 @@ Route::middleware("guest")->group(function (): void {
 });
 
 Route::get("/test", [OcrController::class, "test"]);
+Route::get("/ocr/getResult/{processId}/{type}", [OcrController::class, "getResult"]);
+
 
 Route::middleware("auth")->group(function (): void {
     Route::get("/dashboard", DashboardController::class)->name("dashboard");
