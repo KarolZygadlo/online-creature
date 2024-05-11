@@ -6,17 +6,16 @@ namespace App\Services;
 
 use App\DTOs\DataToAnalyze;
 use App\Enums\DocumentType;
-use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Http\Client\ConnectionException;
-use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
+use Psy\Util\Json;
 
 class OcrService
 {
     /**
      * @throws ConnectionException
      */
-    public function analyzeDocument(DataToAnalyze $data): PromiseInterface|Response
+    public function analyzeDocument(DataToAnalyze $data): string
     {
         $response = Http::withHeaders([
             "Ocp-Apim-Subscription-Key" => env("AZURE_ACCESS_KEY"),
@@ -31,21 +30,21 @@ class OcrService
             "base64Source" => $data->document,
         ]);
 
-        return $this->getAnalyzeResult($response->header("apim-request-id"), $data->type);
+        return $response->header("apim-request-id");
     }
 
     /**
      * @throws ConnectionException
      */
-    protected function getAnalyzeResult(string $id, DocumentType $type): PromiseInterface|Response
+    public function getAnalyzeResult(string $id, DocumentType $type)
     {
-        return Http::async()->withHeaders([
+        return Http::withHeaders([
             "Ocp-Apim-Subscription-Key" => env("AZURE_ACCESS_KEY")])
             ->withUrlParameters([
                 "endpoint" => env("AZURE_ENDPOINT") . "documentintelligence/documentModels",
                 "model" => $type->value,
             ])->withQueryParameters([
                 "api-version" => "2024-02-29-preview",
-            ])->get("{+endpoint}/{model}/analyzeResults/" . $id);
+            ])->get("{+endpoint}/{model}/analyzeResults/" . $id)->json();
     }
 }
