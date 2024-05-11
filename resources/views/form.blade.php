@@ -2,7 +2,7 @@
 
 @section("content")
     <div class="w-full py-10" x-data="{ pdfFile: null }">
-        <form hx-post="/process" hx-target="#code" hx-indicator="#spinner">
+        <form hx-post="/process" hx-target="#code" hx-indicator="#spinner" enctype="multipart/form-data">
             @csrf
             <div class="space-y-12">
                 <div class="border-b border-gray-900/10 pb-12">
@@ -24,10 +24,10 @@
                                               clip-rule="evenodd"/>
                                     </svg>
                                     <div class="mt-4 flex text-sm leading-6 text-gray-600">
-                                        <label for="file-upload"
+                                        <label for="document"
                                                class="relative cursor-pointer rounded-md bg-white font-semibold text-sky-700 focus-within:outline-none focus-within:ring-2 focus-within:ring-sky-700 focus-within:ring-offset-2 hover:text-sky-600">
                                             <span>Upload a PDF file</span>
-                                            <input id="file-upload" name="file-upload" type="file" class="sr-only"
+                                            <input id="document" name="document" type="file" class="sr-only"
                                                    accept="application/pdf"
                                                    x-on:change="pdfFile = $event.target.files[0]">
                                         </label>
@@ -39,14 +39,14 @@
                         </div>
 
                         <div class="sm:col-span-3">
-                            <label for="country"
+                            <label for="type"
                                    class="block text-sm font-medium leading-6 text-gray-900">Document type</label>
                             <div class="mt-2">
-                                <select id="country" name="country" autocomplete="country-name"
+                                <select id="type" name="type" autocomplete="country-name"
                                         class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6">
-                                    <option>Invoice</option>
-                                    <option>Canada</option>
-                                    <option>Mexico</option>
+                                    @foreach($documentTypes as $type => $value)
+                                        <option value="{{$type}}">{{ $value }}</option>
+                                    @endforeach
                                 </select>
                             </div>
                         </div>
@@ -54,18 +54,13 @@
                 </div>
             </div>
 
-            @if($code ?? false)
-                <x-code  :code="$code"/>
-            @endif
-            <div id="code">
-
-            </div>
-
             <div id="pdf-preview-container" class="mt-4" x-show="pdfFile">
                 <label for="cover-photo" class="block text-sm font-medium leading-6 text-gray-900">PDF preview</label>
                 <embed class="mt-2" :src="URL.createObjectURL(pdfFile)" type="application/pdf" width="100%"
                        height="600px">
             </div>
+
+            <div class="mt-5" id="code"></div>
 
             <div class="mt-6 flex items-center justify-end gap-x-6">
                 <button type="submit"
