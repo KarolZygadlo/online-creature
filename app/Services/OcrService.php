@@ -8,7 +8,6 @@ use App\DTOs\DataToAnalyze;
 use App\Enums\DocumentType;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
-use Psy\Util\Json;
 
 class OcrService
 {
